@@ -7,6 +7,7 @@ class ProjectStatus(str, Enum):
     active = "active"
     completed = "completed"
     pending = "pending"
+    rejected = "rejected"
 
 
 class ProjectCreate(BaseModel):
