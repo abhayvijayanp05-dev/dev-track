@@ -51,13 +51,13 @@ def create_project(
         cursor.close()
 
         
-
 def get_project_by_id(connection: Connection, project_id: int):
+
     cursor = connection.cursor()
 
     cursor.execute(
         """
-        SELECT id, name, status
+        SELECT id, name, status, owner_id
         FROM projects
         WHERE id = %s;
         """,

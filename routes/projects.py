@@ -25,7 +25,10 @@ from services.project_service import (
     delete_project_service
 )
 
+from exceptions import (
 
+    ProjectForbiddenError
+)
 from auth.dependencies import get_current_user
 
 
@@ -63,7 +66,8 @@ def create_project_route(
         connection,
         project.id,
         project.name,
-        project.status
+        project.status,
+        current_user
     )
 
     return {
@@ -86,23 +90,29 @@ def get_project_route(
         project_id
     )
 
-
 @router.put("/projects/{project_id}")
 def update_project_route(
     project_id: int,
     updated_project: ProjectUpdate,
     connection: Connection = Depends(get_db),
-     current_user: dict = Depends(
-            require_roles("teacher", "admin")
+    current_user: dict = Depends(
+        require_roles("teacher", "admin")
+    )
+):
+    try:
+        project = update_project_service(
+            connection,
+            project_id,
+            updated_project.name,
+            updated_project.status,
+            current_user
         )
 
-):
-    project = update_project_service(
-        connection,
-        project_id,
-        updated_project.name,
-        updated_project.status
-    )
+    except ProjectForbiddenError:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not allowed to modify this project"
+        )
 
     return {
         "message": "Project updated successfully",
@@ -118,7 +128,7 @@ def delete_project_route(
     project_id: int,
     connection: Connection = Depends(get_db),
     current_user: dict = Depends(
-        require_roles("admin")
+        require_roles("admin","teacher")
     )
 ):
     deleted = delete_project_service(

@@ -8,7 +8,8 @@ from repositories.project_repository import (
 
 from exceptions import (
     ProjectAlreadyExistsError,
-    ProjectNotFoundError
+    ProjectNotFoundError,
+    ProjectForbiddenError
 )
 
 from psycopg.errors import UniqueViolation
@@ -51,14 +52,18 @@ def create_project_service(
     connection,
     project_id: int,
     name: str,
-    status: str
+    status: str,
+    current_user: dict
 ):
+    owner_id = current_user["id"]
+
     try:
         create_project(
             connection,
             project_id,
             name,
-            status
+            status,
+            owner_id
         )
 
     except UniqueViolation:
@@ -74,17 +79,26 @@ def update_project_service(
     connection,
     project_id: int,
     name: str,
-    status: str
+    status: str,
+    current_user: dict
 ):
-    # Check whether the project exists
     existing_project = get_project_by_id(
         connection,
         project_id
     )
 
     if existing_project is None:
-     raise ProjectNotFoundError()
-    # Update the project
+        raise ProjectNotFoundError()
+
+    owner_id = existing_project[3]
+
+    user_id = current_user["id"]
+    user_role = current_user["role"]
+
+    # Admin can update any project
+    if user_role != "admin" and user_id != owner_id:
+        raise ProjectForbiddenError()
+
     update_project(
         connection,
         project_id,
