@@ -111,11 +111,10 @@ def update_project_service(
         "name": name,
         "status": status
     }
-
-
 def delete_project_service(
     connection,
-    project_id: int
+    project_id: int,
+    current_user: dict
 ):
     existing_project = get_project_by_id(
         connection,
@@ -123,7 +122,17 @@ def delete_project_service(
     )
 
     if existing_project is None:
-     raise ProjectNotFoundError()
+        raise ProjectNotFoundError()
+
+
+    owner_id = existing_project[3]
+
+    user_id = current_user["id"]
+    user_role = current_user["role"]
+
+    # Admin can delete any project
+    if user_role != "admin" and user_id != owner_id:
+        raise ProjectForbiddenError()
 
     delete_project(
         connection,

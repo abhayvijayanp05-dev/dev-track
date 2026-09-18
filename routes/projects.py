@@ -1,20 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
-from auth.dependencies import get_current_user
 from psycopg import Connection
+
+from auth.dependencies import get_current_user
 from auth.authorization import require_roles
 from database import get_db
-# from repositories.project_repository import (
-#     get_all_projects,
-#     # create_project,
-#     # get_project_by_id,
-#     # update_project,
-#     # delete_project)
+
 from model import (
     ProjectCreate,
     ProjectUpdate,
     ProjectResponse,
     ProjectListResponse
-
 )
 
 from services.project_service import (
@@ -26,19 +21,18 @@ from services.project_service import (
 )
 
 from exceptions import (
-
+    ProjectAlreadyExistsError,
+    ProjectNotFoundError,
     ProjectForbiddenError
 )
-from auth.dependencies import get_current_user
-
 
 
 router = APIRouter()
 
+
 @router.get("/")
 def greet():
     return "DevTrack API is running 🚀"
-
 
 
 @router.get(
@@ -52,23 +46,31 @@ def get_all_projects_route(
     return get_all_projects_service(connection)
 
 
-
-#post some data inside of the data base 
-
-
-@router.post("/projects", status_code=201)
+@router.post(
+    "/projects",
+    status_code=201
+)
 def create_project_route(
     project: ProjectCreate,
     connection: Connection = Depends(get_db),
-    current_user: dict = Depends(require_roles("teacher", "admin"))
-):
-    created_project = create_project_service(
-        connection,
-        project.id,
-        project.name,
-        project.status,
-        current_user
+    current_user: dict = Depends(
+        require_roles("teacher", "admin")
     )
+):
+    try:
+        created_project = create_project_service(
+            connection,
+            project.id,
+            project.name,
+            project.status,
+            current_user
+        )
+
+    except ProjectAlreadyExistsError:
+        raise HTTPException(
+            status_code=409,
+            detail="Project already exists"
+        )
 
     return {
         "message": "Project created successfully",
@@ -85,10 +87,18 @@ def get_project_route(
     connection: Connection = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    return get_project(
-        connection,
-        project_id
-    )
+    try:
+        return get_project(
+            connection,
+            project_id
+        )
+
+    except ProjectNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found"
+        )
+
 
 @router.put("/projects/{project_id}")
 def update_project_route(
@@ -106,6 +116,12 @@ def update_project_route(
             updated_project.name,
             updated_project.status,
             current_user
+        )
+
+    except ProjectNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found"
         )
 
     except ProjectForbiddenError:
@@ -128,36 +144,26 @@ def delete_project_route(
     project_id: int,
     connection: Connection = Depends(get_db),
     current_user: dict = Depends(
-        require_roles("admin","teacher")
+        require_roles("teacher", "admin")
     )
 ):
-    deleted = delete_project_service(
-        connection,
-        project_id
-    )
+    try:
+        delete_project_service(
+            connection,
+            project_id,
+            current_user
+        )
 
-    if not deleted:
+    except ProjectNotFoundError:
         raise HTTPException(
             status_code=404,
             detail="Project not found"
         )
 
-    return
+    except ProjectForbiddenError:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not allowed to delete this project"
+        )
 
-# DELETE /api/projects/1
-#           │
-#           ▼
-#    projects.py
-#           │
-#           ▼
-# delete_project_service()
-#           │
-#           ├── get_project_by_id()
-#           │       │
-#           │       ▼
-#           │   PostgreSQL
-#           │
-#           └── delete_project()
-#                   │
-#                   ▼
-#               PostgreSQL
+    return
