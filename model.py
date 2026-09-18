@@ -11,7 +11,6 @@ class ProjectStatus(str, Enum):
 
 
 class ProjectCreate(BaseModel):
-    id: int = Field(gt=0)
     name: str = Field(min_length=1, max_length=100)
     status: ProjectStatus
 
@@ -49,3 +48,7 @@ class UserLogin(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+class ProjectMessageResponse(BaseModel):
+    message: str
+    project: ProjectResponse

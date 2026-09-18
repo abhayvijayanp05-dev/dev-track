@@ -9,7 +9,8 @@ from model import (
     ProjectCreate,
     ProjectUpdate,
     ProjectResponse,
-    ProjectListResponse
+    ProjectListResponse,
+    ProjectMessageResponse
 )
 
 from services.project_service import (
@@ -45,27 +46,23 @@ def get_all_projects_route(
 ):
     return get_all_projects_service(connection)
 
-
 @router.post(
     "/projects",
-    status_code=201
+    status_code=201,
+    response_model=ProjectMessageResponse
 )
 def create_project_route(
     project: ProjectCreate,
     connection: Connection = Depends(get_db),
-    current_user: dict = Depends(
-        require_roles("teacher", "admin")
-    )
+    current_user: dict = Depends(require_roles("teacher", "admin"))
 ):
     try:
         created_project = create_project_service(
             connection,
-            project.id,
             project.name,
             project.status,
             current_user
         )
-
     except ProjectAlreadyExistsError:
         raise HTTPException(
             status_code=409,
@@ -99,8 +96,10 @@ def get_project_route(
             detail="Project not found"
         )
 
-
-@router.put("/projects/{project_id}")
+@router.put(
+    "/projects/{project_id}",
+    response_model=ProjectMessageResponse
+)
 def update_project_route(
     project_id: int,
     updated_project: ProjectUpdate,

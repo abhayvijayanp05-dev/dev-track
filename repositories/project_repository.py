@@ -17,10 +17,8 @@ def get_all_projects(connection: Connection):
     return rows
 
 
-
 def create_project(
     connection: Connection,
-    project_id: int,
     name: str,
     status: str,
     owner_id: int
@@ -30,18 +28,22 @@ def create_project(
     try:
         cursor.execute(
             """
-            INSERT INTO projects (id, name, status, owner_id)
-            VALUES (%s, %s, %s, %s);
+            INSERT INTO projects (name, status, owner_id)
+            VALUES (%s, %s, %s)
+            RETURNING id, name, status, owner_id;
             """,
             (
-                project_id,
                 name,
                 status,
                 owner_id
             )
         )
 
+        row = cursor.fetchone()
+
         connection.commit()
+
+        return row
 
     except Exception:
         connection.rollback()
@@ -49,7 +51,6 @@ def create_project(
 
     finally:
         cursor.close()
-
         
 def get_project_by_id(connection: Connection, project_id: int):
 

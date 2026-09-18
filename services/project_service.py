@@ -47,10 +47,8 @@ def get_project(
         "status": row[2]
     }
 
-
 def create_project_service(
     connection,
-    project_id: int,
     name: str,
     status: str,
     current_user: dict
@@ -58,21 +56,19 @@ def create_project_service(
     owner_id = current_user["id"]
 
     try:
-        create_project(
+        row = create_project(
             connection,
-            project_id,
             name,
             status,
             owner_id
         )
-
     except UniqueViolation:
         raise ProjectAlreadyExistsError()
 
     return {
-        "id": project_id,
-        "name": name,
-        "status": status
+        "id": row[0],
+        "name": row[1],
+        "status": row[2]
     }
 
 def update_project_service(
