@@ -34,10 +34,12 @@ def register(
     connection: Connection = Depends(get_db)
 ):
     return register_user(
-        connection,
-        user.email,
-        user.password
-    )
+    connection,
+    user.email,
+    user.password,
+    "student",
+    "active"
+)
 
 
 @router.post(

@@ -40,6 +40,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     role: str
+    status: str
 
 class UserLogin(BaseModel):
     email: EmailStr

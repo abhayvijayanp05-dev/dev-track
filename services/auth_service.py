@@ -11,7 +11,9 @@ from auth.security import (
 def register_user(
     connection,
     email: str,
-    password: str
+    password: str,
+    role: str,
+    status: str
 ):
     hashed_password = hash_password(password)
 
@@ -19,13 +21,15 @@ def register_user(
         connection,
         email,
         hashed_password,
-        "student"
+        role,
+        status
     )
 
     return {
         "id": user[0],
         "email": user[1],
-        "role": user[2]
+        "role": user[2],
+        "status": user[3]
     }
 
 
