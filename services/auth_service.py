@@ -1,12 +1,15 @@
 from repositories.user_repository import (
     create_user,
-    get_user_by_email
+    get_user_by_email,
+    approve_teacher
 )
 from auth.security import (
     hash_password,
     verify_password,
     create_access_token
 )
+
+
 
 def register_user(
     connection,
@@ -56,6 +59,10 @@ def login_user(
     if not password_is_valid:
         return None
 
+    # Check account status
+    if user[4] != "active":
+        return None
+
     access_token = create_access_token(
         data={
             "sub": str(user[0]),
@@ -67,4 +74,24 @@ def login_user(
     return {
         "access_token": access_token,
         "token_type": "bearer"
+    }
+
+
+def approve_teacher_service(
+    connection,
+    user_id: int
+):
+    user = approve_teacher(
+        connection,
+        user_id
+    )
+
+    if user is None:
+        return None
+
+    return {
+        "id": user[0],
+        "email": user[1],
+        "role": user[2],
+        "status": user[3]
     }

@@ -7,8 +7,10 @@ from fastapi import (
 from fastapi.security import OAuth2PasswordRequestForm
 from psycopg import Connection
 
+from auth.authorization import require_roles
 from database import get_db
 
+from exceptions import ProjectForbiddenError, ProjectNotFoundError
 from model import (
     UserCreate,
     UserResponse,
@@ -16,6 +18,7 @@ from model import (
 )
 
 from services.auth_service import (
+    approve_teacher_service,
     register_user,
     login_user
 )
@@ -63,3 +66,48 @@ def login(
         )
 
     return authenticated_user
+
+
+
+
+@router.post(
+    "/teacher-register",
+    response_model=UserResponse,
+    status_code=201
+)
+def teacher_register(
+    user: UserCreate,
+    connection: Connection = Depends(get_db)
+):
+    return register_user(
+        connection,
+        user.email,
+        user.password,
+        "teacher",
+        "pending"
+    )
+
+@router.put("/users/{user_id}/approve")
+def approve_teacher_route(
+    user_id: int,
+    connection: Connection = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles("admin")
+    )
+):
+    user = approve_teacher_service(
+        connection,
+        user_id,
+     
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Teacher not found or already approved"
+        )
+
+    return {
+        "message": "Teacher approved successfully",
+        "user": user
+    }

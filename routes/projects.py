@@ -33,7 +33,7 @@ router = APIRouter()
 
 @router.get("/")
 def greet():
-    return "DevTrack API is running 🚀"
+    return "DevTrack API is running "
 
 
 @router.get(

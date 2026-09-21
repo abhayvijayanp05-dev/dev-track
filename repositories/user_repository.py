@@ -55,3 +55,37 @@ def get_user_by_email(
     cursor.close()
 
     return user
+
+
+
+def approve_teacher(
+    connection: Connection,
+    user_id: int
+):
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            UPDATE users
+            SET status = 'active'
+            WHERE id = %s
+            AND role = 'teacher'
+            AND status = 'pending'
+            RETURNING id, email, role, status;
+            """,
+            (user_id,)
+        )
+
+        user = cursor.fetchone()
+
+        connection.commit()
+
+        return user
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        cursor.close()
