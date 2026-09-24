@@ -89,3 +89,34 @@ def approve_teacher(
 
     finally:
         cursor.close()
+
+
+def get_all_users(connection: Connection):
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, email, role, status FROM users  where role = 'teacher';
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+
+    return rows
+
+def get_all_students(connection: Connection):
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, email, role, status FROM users  where role = 'student';
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+
+    return rows

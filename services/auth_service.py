@@ -1,7 +1,9 @@
 from repositories.user_repository import (
     create_user,
     get_user_by_email,
-    approve_teacher
+    approve_teacher,
+    get_all_users,
+    get_all_students
 )
 from auth.security import (
     hash_password,
@@ -94,4 +96,36 @@ def approve_teacher_service(
         "email": user[1],
         "role": user[2],
         "status": user[3]
+    }
+
+
+def get_all_users_service(connection):
+    rows = get_all_users(connection)
+
+    return {
+        "users": [
+            {
+                "id": row[0],
+                "email": row[1],
+                "role": row[2],
+                "status": row[3]
+            }
+            for row in rows
+        ]
+    }
+
+
+def get_all_students_service(connection):
+    rows = get_all_students(connection)
+
+    return {
+        "students": [
+            {
+                "id": row[0],
+                "email": row[1],
+                "role": row[2],
+                "status": row[3]
+            }
+            for row in rows
+        ]
     }

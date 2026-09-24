@@ -53,3 +53,20 @@ class TokenResponse(BaseModel):
 class ProjectMessageResponse(BaseModel):
     message: str
     project: ProjectResponse
+
+class UserResponse_viewing_by_admin(BaseModel):
+    id: int
+    email: str
+    status: str
+
+class UserListResponse_viewing_by_admin(BaseModel):
+    users: list[UserResponse_viewing_by_admin]
+
+    
+class UserResponse_viewing_by_teacher(BaseModel):
+    id: int
+    email: str
+    status: str
+
+class UserListResponse_viewing_by_teacher(BaseModel):
+    students: list[UserResponse_viewing_by_teacher]
